@@ -3,6 +3,7 @@ import time
 import logging
 
 from pokete.classes.attack import Attack
+from pokete.classes.fight.battle_animations import BattleAnimator
 from pokete.release import SPEED_OF_TIME
 from .providers import Provider
 from .fightmap import FightMap
@@ -14,6 +15,7 @@ from ..poke import Poke
 class AttackProcess:
     def __init__(self, fightmap: FightMap):
         self.fightmap: FightMap = fightmap
+        self.battle_animator = BattleAnimator(fightmap)
 
     @staticmethod
     def get_random_factor(attack, attacker) -> float:
@@ -71,6 +73,18 @@ class AttackProcess:
             time.sleep(SPEED_OF_TIME * 0.4)
             for i in attack.move:
                 getattr(attacker.moves, i)()
+
+            # Play battle animations (damage numbers, hit flash, effectiveness)
+            is_miss = random_factor == 0
+            self.battle_animator.play_attack_animation(
+                attacker=attacker,
+                defender=defender,
+                attack=attack,
+                damage=n_hp,
+                effectiveness=eff,
+                is_miss=is_miss
+            )
+
             if attack.action is not None and random_factor != 0:
                 getattr(AttackActions, attack.action)(attacker, defender,
                                                       providers)

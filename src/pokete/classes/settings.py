@@ -169,6 +169,7 @@ class Settings:
         self.keywords = {
             "autosave": True,
             "animations": True,
+            "battle_animations": True,
             "save_trainers": True,
             "load_mods": False,
             "audio": True,
