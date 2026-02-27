@@ -7,6 +7,7 @@ import scrap_engine as se
 
 from pokete.release import SPEED_OF_TIME
 from pokete.base.color import Color
+from pokete.classes.battle_animation import battle_animations
 
 
 class Effect:
@@ -59,6 +60,10 @@ class Effect:
             self.obj = obj
             self.obj.effects.append(self)
             self.add_label()
+            # Play status effect animation
+            battle_animations.play_status_effect(
+                obj.ico.map, obj.ico, self.c_name
+            )
             self.obj.ico.map.outp.rechar(f'{obj.ext_name} is now ')
             self.obj.ico.map.outp.append(se.Text(self.name,
                                                  esccode=self.str_esccode,

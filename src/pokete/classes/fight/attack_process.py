@@ -3,6 +3,7 @@ import time
 import logging
 
 from pokete.classes.attack import Attack
+from pokete.classes.battle_animation import battle_animations
 from pokete.release import SPEED_OF_TIME
 from .providers import Provider
 from .fightmap import FightMap
@@ -39,6 +40,10 @@ class AttackProcess:
                       / (defender.defense if defender.defense >= 1 else 1))
                      * random_factor * eff)
 
+    @staticmethod
+    def is_critical_hit(random_factor: float) -> bool:
+        return random_factor >= 1.26
+
     def __call__(self, attacker: Poke, defender: Poke, attack: Attack,
                  providers: list[Provider]):
         """Attack process
@@ -71,6 +76,21 @@ class AttackProcess:
             time.sleep(SPEED_OF_TIME * 0.4)
             for i in attack.move:
                 getattr(attacker.moves, i)()
+
+            # Show damage numbers and effectiveness animations
+            if random_factor == 0:
+                battle_animations.show_miss(self.fightmap, defender.ico)
+            else:
+                is_critical = self.is_critical_hit(random_factor)
+                if n_hp > 0 and defender != attacker:
+                    battle_animations.show_damage(
+                        self.fightmap, defender.ico, n_hp, is_critical=is_critical
+                    )
+                if eff != 1 and n_hp > 0:
+                    battle_animations.show_effectiveness(
+                        self.fightmap, defender.ico, eff
+                    )
+
             if attack.action is not None and random_factor != 0:
                 getattr(AttackActions, attack.action)(attacker, defender,
                                                       providers)
