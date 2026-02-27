@@ -7,7 +7,6 @@ import scrap_engine as se
 
 from pokete.release import SPEED_OF_TIME
 from pokete.base.color import Color
-from pokete.classes.fight.battle_animations import StatusEffectIndicator, BattleAnimator
 
 
 class Effect:
@@ -85,6 +84,8 @@ class Effect:
             is_applied: True if effect is being applied, False if removed"""
         try:
             if hasattr(obj, 'ico') and hasattr(obj.ico, 'x') and hasattr(obj.ico, 'map'):
+                # Lazy import to avoid circular dependency
+                from pokete.classes.fight.battle_animations import StatusEffectIndicator
                 indicator = StatusEffectIndicator(
                     self.c_name,
                     obj.ico.x + obj.ico.width // 2,
@@ -227,6 +228,8 @@ This is reverted randomly."
 
         # Show damage number for effect damage
         try:
+            # Lazy import to avoid circular dependency
+            from pokete.classes.fight.battle_animations import BattleAnimator
             battle_animator = BattleAnimator(self.obj.ico.map)
             battle_animator.play_attack_animation(
                 attacker=self.obj,

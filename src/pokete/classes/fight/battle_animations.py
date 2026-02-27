@@ -18,7 +18,6 @@ import scrap_engine as se
 
 from pokete.base.color import Color
 from pokete.release import SPEED_OF_TIME
-from pokete.classes.settings import settings
 
 if TYPE_CHECKING:
     from pokete.classes.poke import Poke
@@ -66,9 +65,11 @@ def get_type_effects(type_name: str) -> TypeEffects:
 def are_battle_animations_enabled() -> bool:
     """Check if battle animations are enabled in settings."""
     try:
+        # Lazy import to avoid circular dependency
+        from pokete.classes.settings import settings
         return settings("battle_animations").val
-    except (IndexError, AttributeError):
-        # Setting doesn't exist yet, default to True
+    except (IndexError, AttributeError, ImportError):
+        # Setting doesn't exist yet or import failed, default to True
         return True
 
 
