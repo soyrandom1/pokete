@@ -7,6 +7,7 @@ import scrap_engine as se
 
 from pokete.release import SPEED_OF_TIME
 from pokete.base.color import Color
+from pokete.classes.battle_animations import StatusEffectIndicator, BattleAnimator
 
 
 class Effect:
@@ -59,6 +60,10 @@ class Effect:
             self.obj = obj
             self.obj.effects.append(self)
             self.add_label()
+
+            # Play status effect animation
+            self._play_status_animation(obj, is_applied=True)
+
             self.obj.ico.map.outp.rechar(f'{obj.ext_name} is now ')
             self.obj.ico.map.outp.append(se.Text(self.name,
                                                  esccode=self.str_esccode,
@@ -72,6 +77,24 @@ class Effect:
                                             state="float"),
                                     se.Text("!", state="float"))
         time.sleep(SPEED_OF_TIME * 2)
+
+    def _play_status_animation(self, obj, is_applied: bool = True):
+        """Play the status effect visual animation.
+        ARGS:
+            obj: The Poke the effect is applied to
+            is_applied: True if effect is being applied, False if removed"""
+        try:
+            if hasattr(obj, 'ico') and hasattr(obj.ico, 'x') and hasattr(obj.ico, 'map'):
+                indicator = StatusEffectIndicator(
+                    self.c_name,
+                    obj.ico.x + obj.ico.width // 2,
+                    max(1, obj.ico.y - 1),
+                    obj.ico.map,
+                    is_applied
+                )
+                indicator.play()
+        except (AttributeError, se.CoordinateError):
+            pass
 
     def add_label(self):
         """Adds the label to the fightmap"""
@@ -99,6 +122,9 @@ class Effect:
     def remove(self):
         """Removes itself from the current pokete with a certain chance"""
         if random.randint(0, self.rem_chance) == 0:
+            # Play removal animation before removing
+            self._play_status_animation(self.obj, is_applied=False)
+
             self.obj.ico.map.outp.outp(f'{self.obj.ext_name} isn\'t ')
             self.obj.ico.map.outp.append(se.Text(self.name,
                                                  esccode=self.str_esccode,
@@ -190,12 +216,29 @@ This is reverted randomly."
                                      se.Text("!", state="float"))
         self.obj.ico.map.show()
         time.sleep(SPEED_OF_TIME * 1)
+        total_damage = 0
         for _ in range(random.randint(1, 3)):
             oldhp = self.obj.hp
             self.obj.hp = max(self.obj.hp - self.damage, 0)
+            total_damage += self.damage
             self.obj.hp_bar.update(oldhp)
             self.obj.ico.map.outp.outp(f'{self.obj.ext_name} {self.hurt_text}')
             time.sleep(SPEED_OF_TIME * 0.5)
+
+        # Show damage number for effect damage
+        try:
+            battle_animator = BattleAnimator(self.obj.ico.map)
+            battle_animator.play_attack_animation(
+                attacker=self.obj,
+                defender=self.obj,
+                attack=type('EffectDamage', (), {'type': type('Type', (), {'name': 'fire' if self.c_name == 'burning' else 'poison'})(), 'factor': 1})(),
+                damage=total_damage,
+                effectiveness=1.0,
+                is_miss=False
+            )
+        except (AttributeError, TypeError):
+            pass
+
         return 0
 
 
